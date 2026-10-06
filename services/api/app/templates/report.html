@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claim packet {{ p.sweep.id }} — SpineSight</title>
+<style>
+  :root { --ink:#16130f; --muted:#6b6257; --line:#e4ddd2; --accent:#b4471f; --bg:#fbf8f3; --warn:#9a6b00; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.45 "Iowan Old Style", Georgia, serif; color: var(--ink); background: var(--bg); margin: 0; padding: 32px 16px; }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 32px 0 8px; border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+  .meta { color: var(--muted); font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+  .stat { border: 1px solid var(--line); background: #fff; padding: 12px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { color: var(--muted); font-size: 12px; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: #fff; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: ui-monospace, Menlo, monospace; font-size: 11px; text-transform: uppercase; color: var(--muted); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-family: ui-monospace, monospace; }
+  .identified, .priced { background: #e6f2e6; } .unidentified, .unpriced { background: #eee; }
+  .needs_appraisal { background: #fbe6d9; color: var(--accent); } .range { background: #fff3cc; }
+  .src { color: var(--muted); font-size: 11px; } a { color: var(--accent); }
+  .conv { color: var(--warn); font-size: 11px; }
+  @media print { body { background: #fff; padding: 0; } a { color: inherit; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="meta">SPINESIGHT CONTENTS CLAIM PACKET · sweep {{ p.sweep.id }} · captured {{ p.sweep.captured_at }} · {{ p.sweep.duration_s }} s · {{ p.sweep.device or "unknown device" }}</p>
+  <h1>Home library — contents inventory</h1>
+  <p class="meta">Country {{ p.sweep.country }} · currency {{ p.sweep.currency }} · all totals computed in code from the lines below</p>
+
+  <div class="grid">
+    <div class="stat"><b>{{ t.book_count }}</b><span>books ({{ t.books_identified }} identified, {{ t.books_unidentified }} unidentified, {{ t.books_needs_appraisal }} appraisal)</span></div>
+    <div class="stat"><b>{{ "%.2f"|format(t.shelf_run_m) }} m</b><span>shelf run</span></div>
+    <div class="stat"><b>{{ money(t.books_replacement_cost) }}</b><span>books replacement cost</span></div>
+    <div class="stat"><b>{{ money(t.books_used_value) }}</b><span>books used value</span></div>
+    <div class="stat"><b>{{ money(t.items_replacement_cost_low) }}–{{ money(t.items_replacement_cost_high) }}</b><span>other contents replacement</span></div>
+    <div class="stat"><b>{{ t.excluded_from_totals }}</b><span>lines excluded from totals</span></div>
+    <div class="stat"><b>{{ p.review_queue|length }}</b><span>review queue entries</span></div>
+  </div>
+
+  <h2>Room</h2>
+  <div class="scroll"><table>
+    <tr><th>Length</th><th>Width</th><th>Height</th><th>Floor</th><th>Walls</th><th>Shelved wall</th><th>Shape</th><th>Scale method</th><th>Confidence</th></tr>
+    <tr>
+      <td class="num">{{ dim(r.length_m, "m") }}</td><td class="num">{{ dim(r.width_m, "m") }}</td><td class="num">{{ dim(r.height_m, "m") }}</td>
+      <td class="num">{{ dim(r.floor_area_m2, "m²") }}<br><span class="src">{{ dim(r.floor_area_ft2, "ft²") }}</span></td>
+      <td class="num">{{ dim(r.wall_area_m2, "m²") }}<br><span class="src">{{ dim(r.wall_area_ft2, "ft²") }}</span></td>
+      <td class="num">{{ dim(r.shelved_wall_area_m2, "m²") }}<br><span class="src">{{ dim(r.shelved_wall_area_ft2, "ft²") }}</span></td>
+      <td>{{ r.shape }}</td><td>{{ r.scale_method }}</td><td class="num">{{ "%.2f"|format(r.confidence) }}</td>
+    </tr>
+  </table></div>
+  {% for n in r.notes %}<p class="src">{{ n }}</p>{% endfor %}
+  <p class="src">Evidence: {% for f in r.frame_refs %}<a href="{{ frame_url(f) }}">{{ f.split('/')[-1] }}</a> {% endfor %}</p>
+
+  <h2>Books ({{ p.books|length }})</h2>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Shelf</th><th>Status</th><th>Title / author</th><th>Edition · ISBN</th><th>H×T cm</th><th>Conf.</th><th>Replacement</th><th>Used</th><th>Frame</th></tr>
+    {% for b in p.books %}
+    <tr>
+      <td>{{ b.id }}</td><td>{{ b.shelf }}·{{ b.position }}</td>
+      <td><span class="pill {{ b.status }}">{{ b.status }}</span>{% if b.excluded %} <span class="pill">excluded</span>{% endif %}</td>
+      <td>{% if b.title %}<b>{{ b.title }}</b><br>{{ b.author }}{% else %}<span class="src">spine text: {{ b.spine_text_raw or "unreadable" }}</span>{% endif %}
+        {% if b.catalog_url %}<br><a class="src" href="{{ b.catalog_url }}">{{ b.catalog_source }}</a>{% endif %}
+        {% if b.appraisal_reason %}<br><span class="conv">{{ b.appraisal_reason }}</span>{% endif %}
+        {% for n in b.user_notes %}<br><span class="src">“{{ n }}”</span>{% endfor %}</td>
+      <td>{{ b.edition }}<br><span class="src">{{ b.isbn }}</span></td>
+      <td class="num">{{ dim(b.spine_height_cm, "") }} × {{ dim(b.spine_thickness_cm, "") }}</td>
+      <td class="num">{{ "%.2f"|format(b.id_confidence) }}</td>
+      <td class="num">{{ quote(b.replacement_cost) }}</td>
+      <td class="num">{{ quote(b.used_value) }}</td>
+      <td>{% if b.frame_ref %}<a href="{{ frame_url(b.frame_ref) }}">{{ b.frame_ref.split('/')[-1] }}</a>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+
+  <h2>Other contents ({{ p.items|length }})</h2>
+  <div class="scroll"><table>
+    <tr><th>#</th><th>Category</th><th>Description</th><th>Brand / model</th><th>W×H cm</th><th>Status</th><th>Replacement (low–high)</th><th>Conf.</th><th>Frame</th></tr>
+    {% for i in p.items %}
+    <tr>
+      <td>{{ i.id }}</td><td>{{ i.category }}</td><td>{{ i.description }}{% if i.material %} · {{ i.material }}{% endif %}{% for n in i.user_notes %}<br><span class="src">“{{ n }}”</span>{% endfor %}</td>
+      <td>{{ i.brand_model }}</td><td class="num">{{ dim(i.dimensions_cm.w, "") }} × {{ dim(i.dimensions_cm.h, "") }}</td>
+      <td><span class="pill {{ i.status }}">{{ i.status }}</span></td>
+      <td class="num">{% if i.replacement_cost.low is not none %}{{ money(i.replacement_cost.low) }}–{{ money(i.replacement_cost.high) }}
+        <br><a class="src" href="{{ i.replacement_cost.url }}">{{ i.replacement_cost.source }}</a><br><span class="src">{{ i.replacement_cost.retrieved_at }}</span>
+        {% if i.replacement_cost.converted %}<br><span class="conv">converted @ {{ i.replacement_cost.fx_rate }}</span>{% endif %}{% else %}—{% endif %}</td>
+      <td class="num">{{ "%.2f"|format(i.confidence) }}</td>
+      <td>{% if i.frame_ref %}<a href="{{ frame_url(i.frame_ref) }}">{{ i.frame_ref.split('/')[-1] }}</a>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+
+  {% if p.second_locale %}
+  <h2>Locale check — same books priced in {{ p.second_locale[0].country }} ({{ p.second_locale[0].currency }})</h2>
+  <div class="scroll"><table>
+    <tr><th>Book</th><th>Replacement</th><th>Used</th><th>Note</th></tr>
+    {% for c in p.second_locale %}
+    <tr><td>{{ c.title }}</td><td class="num">{{ quote(c.replacement_cost) }}</td><td class="num">{{ quote(c.used_value) }}</td><td class="src">{{ c.appraisal_reason }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+
+  <h2>Review queue ({{ p.review_queue|length }})</h2>
+  <div class="scroll"><table>
+    <tr><th>Line</th><th>Reason</th></tr>
+    {% for q in p.review_queue %}<tr><td>{{ q.ref_id }}</td><td>{{ q.reason }}</td></tr>{% endfor %}
+    {% for n in p.unattached_notes %}<tr><td>note</td><td>{{ n }}</td></tr>{% endfor %}
+  </table></div>
+
+  {% if p.metrics %}
+  <h2>Latency and cost</h2>
+  <div class="scroll"><table>
+    <tr><th>Stage</th><th>Latency s</th><th>Calls</th><th>Cost USD</th></tr>
+    {% for m in p.metrics %}<tr><td>{{ m.stage }}</td><td class="num">{{ m.latency_s }}</td><td class="num">{{ m.calls }}</td><td class="num">{{ m.cost_usd }}</td></tr>{% endfor %}
+  </table></div>
+  {% endif %}
+</main>
+</body>
+</html>
