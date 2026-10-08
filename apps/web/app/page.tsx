@@ -1,7 +1,11 @@
 import Link from "next/link";
 
-import { HeroShelf } from "@/components/landing/HeroShelf";
-import { LiveTicker } from "@/components/landing/LiveTicker";
+import { Hero } from "@/components/landing/Hero";
+import { Reveal, RevealGroup, RevealItem } from "@/components/landing/motion/Reveal";
+import { ScaleIn } from "@/components/landing/motion/ScaleIn";
+import { ScrollProgress } from "@/components/landing/motion/ScrollProgress";
+import { ScrollWords } from "@/components/landing/motion/ScrollWords";
+import { StepsTimeline } from "@/components/landing/motion/StepsTimeline";
 
 const STEPS = [
   {
@@ -52,6 +56,7 @@ const PASS_BARS = [
 export default function Home() {
   return (
     <main className="flex-1">
+      <ScrollProgress />
       <header className="sticky top-0 z-30 border-b border-ink-3/80 bg-ink/80 backdrop-blur">
         <nav aria-label="Main navigation" className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-8">
           <Link href="/" className="flex items-center gap-2 text-lg font-semibold tracking-tight">
@@ -68,102 +73,52 @@ export default function Home() {
       </header>
 
       {/* HERO */}
-      <section aria-labelledby="hero-heading" className="grain relative overflow-hidden">
-        <div className="pointer-events-none absolute -right-40 -top-40 h-[560px] w-[560px] rounded-full bg-oxblood/30 blur-[120px]" />
-        <div className="mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-8 sm:pt-24">
-          <p className="label flex items-center gap-2 text-signal">
-            <span className="live-dot inline-block h-2 w-2 rounded-full bg-signal" />
-            Contents claim agent · voice + vision · one sweep
-          </p>
-          <h1
-            id="hero-heading"
-            className="mt-6 font-display leading-[0.86] tracking-[-0.035em]"
-            style={{ fontSize: "var(--text-hero)", fontVariationSettings: '"SOFT" 30, "WONK" 1' }}
-          >
-            Every spine.
-            <br />
-            <span className="italic text-brass">Measured,</span> priced,
-            <br />
-            proven.
-          </h1>
-          <div className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-end">
-            <p className="max-w-xl text-lg leading-relaxed text-paper/75 sm:text-xl">
-              Walk your home library once with your phone. SpineSight talks you through it, reads and measures every
-              book from its spine, prices it at local market value with a source you can click, and measures the room
-              from the same pass.
-            </p>
-            <div className="flex flex-wrap gap-3 lg:justify-end">
-              <Link
-                href="/sweep"
-                className="group inline-flex items-center gap-3 rounded-sm bg-signal px-6 py-4 text-lg font-medium text-ink transition-all duration-300 hover:gap-5 hover:shadow-[0_0_40px_-6px_rgba(255,107,44,0.7)]"
-              >
-                Start a live sweep <span aria-hidden>→</span>
-              </Link>
-              <a
-                href="#rules"
-                className="inline-flex items-center rounded-sm border border-paper/25 px-6 py-4 text-lg text-paper/85 transition-colors hover:border-paper hover:text-paper"
-              >
-                How it stays honest
-              </a>
-            </div>
-          </div>
-          <div className="mt-16">
-            <HeroShelf />
-            <div className="mt-6">
-              <LiveTicker />
-            </div>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* STEPS */}
       <section aria-labelledby="steps-heading" className="bg-paper text-ink" style={{ paddingBlock: "var(--space-section)" }}>
         <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8 lg:grid-cols-[0.8fr_2fr]">
-          <div>
+          <Reveal className="lg:sticky lg:top-28 lg:self-start">
             <p className="label text-oxblood">The sweep</p>
-            <h2 id="steps-heading" className="mt-3 text-5xl leading-[0.95] tracking-tight sm:text-6xl">
+            <h2 id="steps-heading" className="mt-3 text-5xl leading-[0.95] tracking-tight sm:text-7xl">
               One walk.
               <br />
               <span className="italic">Under three minutes.</span>
             </h2>
-          </div>
-          <ol className="divide-y divide-rule border-y border-rule">
-            {STEPS.map((s, i) => (
-              <li key={s.n} className="grid gap-4 py-8 sm:grid-cols-[5rem_1fr]" style={{ paddingLeft: `${i * 1.5}rem` }}>
-                <span className="font-mono text-sm text-oxblood">{s.n}</span>
-                <div>
-                  <h3 className="text-3xl tracking-tight">{s.title}</h3>
-                  <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ink/70">{s.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          </Reveal>
+          <StepsTimeline steps={STEPS} />
         </div>
       </section>
 
       {/* RULES */}
       <section id="rules" aria-labelledby="rules-heading" className="grain relative bg-oxblood" style={{ paddingBlock: "var(--space-section)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-8">
-          <p className="label text-paper/60">Money is attached</p>
-          <h2 id="rules-heading" className="mt-3 max-w-4xl text-5xl leading-[0.95] tracking-tight sm:text-7xl">
-            No number without evidence.
-          </h2>
-          <div className="mt-16 grid gap-10 md:grid-cols-3">
+          <Reveal>
+            <p className="label text-paper/60">Money is attached</p>
+          </Reveal>
+          <ScrollWords
+            id="rules-heading"
+            text="No number without evidence."
+            className="mt-3 max-w-5xl text-6xl leading-[0.92] tracking-tight sm:text-8xl"
+          />
+          <RevealGroup className="mt-20 grid gap-10 md:grid-cols-3" stagger={0.14}>
             {RULES.map(([tag, title, body]) => (
-              <article key={tag} className="border-t-2 border-paper/80 pt-5">
+              <RevealItem key={tag} as="article" className="group border-t-2 border-paper/80 pt-5">
                 <p className="label text-brass">{tag}</p>
-                <h3 className="mt-3 text-3xl italic leading-tight">{title}</h3>
+                <h3 className="mt-3 text-3xl italic leading-tight transition-transform duration-500 group-hover:translate-x-1">
+                  {title}
+                </h3>
                 <p className="mt-4 leading-relaxed text-paper/75">{body}</p>
-              </article>
+              </RevealItem>
             ))}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
       {/* PIPELINE */}
       <section aria-labelledby="pipeline-heading" style={{ paddingBlock: "var(--space-section)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-6">
+          <Reveal className="flex flex-wrap items-end justify-between gap-6">
             <h2 id="pipeline-heading" className="max-w-2xl text-5xl leading-[0.95] tracking-tight sm:text-6xl">
               Eight stages. <span className="italic text-brass">Each one testable.</span>
             </h2>
@@ -171,24 +126,36 @@ export default function Home() {
               Identification, pricing and measurement are separate steps with their own outputs, so every line traces
               back to a frame and a price source.
             </p>
-          </div>
-          <ol className="mt-14 grid gap-px overflow-hidden rounded-sm border border-ink-3 bg-ink-3 sm:grid-cols-2 lg:grid-cols-4">
+          </Reveal>
+          <RevealGroup
+            as="ol"
+            className="mt-14 grid gap-px overflow-hidden rounded-sm border border-ink-3 bg-ink-3 sm:grid-cols-2 lg:grid-cols-4"
+            stagger={0.07}
+          >
             {PIPELINE.map(([stage, tech, what], i) => (
-              <li key={stage} className="group bg-ink-2 p-6 transition-colors duration-300 hover:bg-ink-3">
+              <RevealItem
+                as="li"
+                key={stage}
+                className="group relative bg-ink-2 p-6 transition-colors duration-300 hover:bg-ink-3"
+              >
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-signal transition-transform duration-500 group-hover:scale-x-100"
+                />
                 <span className="font-mono text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
                 <h3 className="mt-6 text-2xl tracking-tight transition-colors group-hover:text-signal">{stage}</h3>
                 <p className="label mt-2 text-brass">{tech}</p>
                 <p className="mt-3 text-sm leading-relaxed text-paper/60">{what}</p>
-              </li>
+              </RevealItem>
             ))}
-          </ol>
+          </RevealGroup>
         </div>
       </section>
 
       {/* PASS BARS */}
       <section aria-labelledby="bars-heading" className="bg-paper-2 text-ink" style={{ paddingBlock: "var(--space-section)" }}>
         <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-8 lg:grid-cols-[1fr_1.4fr]">
-          <div>
+          <Reveal className="lg:sticky lg:top-28 lg:self-start">
             <p className="label text-oxblood">Measured against tape and receipts</p>
             <h2 id="bars-heading" className="mt-3 text-5xl leading-[0.95] tracking-tight">
               The bars it is held to.
@@ -197,24 +164,28 @@ export default function Home() {
               Scored on hand-built ground truth: a true count, hand-read titles, tape-measured spines and room, and
               hand-checked prices. Misses are reported, not hidden.
             </p>
-          </div>
+          </Reveal>
           <table className="w-full border-collapse text-left">
-            <tbody>
+            <RevealGroup as="tbody" stagger={0.06}>
               {PASS_BARS.map(([m, bar]) => (
-                <tr key={m} className="border-b border-rule">
+                <RevealItem as="tr" key={m} className="border-b border-rule">
                   <th scope="row" className="py-4 pr-4 text-xl font-normal">{m}</th>
                   <td className="py-4 text-right font-mono text-sm text-oxblood">{bar}</td>
-                </tr>
+                </RevealItem>
               ))}
-            </tbody>
+            </RevealGroup>
           </table>
         </div>
       </section>
 
       {/* CTA */}
       <section className="grain relative overflow-hidden" style={{ paddingBlock: "var(--space-section)" }}>
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-8">
-          <h2 className="text-5xl leading-[0.95] tracking-tight sm:text-7xl">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[520px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-signal/10 blur-[140px]"
+        />
+        <ScaleIn className="relative mx-auto max-w-7xl px-4 text-center sm:px-8">
+          <h2 className="text-6xl leading-[0.92] tracking-tight sm:text-8xl">
             Open it on your phone.
             <br />
             <span className="italic text-signal">Start talking.</span>
@@ -225,7 +196,7 @@ export default function Home() {
           >
             Begin the sweep <span aria-hidden>→</span>
           </Link>
-        </div>
+        </ScaleIn>
       </section>
 
       <footer className="border-t border-ink-3 px-4 py-8 sm:px-8">

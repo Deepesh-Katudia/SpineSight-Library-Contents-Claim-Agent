@@ -80,6 +80,19 @@ body {
   animation: pulse-dot 1.4s ease-in-out infinite;
 }
 
+@keyframes cue-drop {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scroll-cue::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  animation: cue-drop 1.6s var(--ease-out-expo) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
