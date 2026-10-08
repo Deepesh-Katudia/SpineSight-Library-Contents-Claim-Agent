@@ -1,7 +1,7 @@
 """Audit log of raw stage outputs, transcripts and agent events.
 
-MongoDB Atlas when MONGODB_URI is set (schemaless documents suit raw VLM output); otherwise JSONL
-files next to the frames. Logging never blocks or fails the pipeline.
+Supabase Postgres `events` table (payload as jsonb, which suits schemaless VLM output) when configured;
+otherwise JSONL files next to the frames. Logging never blocks or fails the pipeline.
 """
 
 from __future__ import annotations
@@ -20,11 +20,11 @@ log = logging.getLogger(__name__)
 class EventLog:
     def __init__(self, settings: Settings) -> None:
         self._root = Path(settings.data_dir)
-        self._db = None
-        if settings.mongodb_uri:
-            from pymongo import MongoClient
+        self._sb = None
+        if settings.supabase_url and settings.supabase_service_role_key:
+            from supabase import create_client
 
-            self._db = MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000)[settings.mongodb_db]
+            self._sb = create_client(settings.supabase_url, settings.supabase_service_role_key)
 
     def _write_local(self, sweep_id: str, doc: dict) -> None:
         path = self._root / "sweeps" / sweep_id / "events.jsonl"
@@ -34,8 +34,9 @@ class EventLog:
 
     def _write(self, sweep_id: str, doc: dict) -> None:
         try:
-            if self._db is not None:
-                self._db.events.insert_one(dict(doc))
+            if self._sb is not None:
+                # Round-trip through json so non-JSON values (datetimes, paths) serialise the same as locally.
+                self._sb.table("events").insert(json.loads(json.dumps(doc, default=str))).execute()
             else:
                 self._write_local(sweep_id, doc)
         except Exception:

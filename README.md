@@ -54,8 +54,7 @@ On a phone:
 | `OPENROUTER_API_KEY` | Detection + spine reading (`google/gemini-3.8-flash`) | openrouter.ai/keys |
 | `GOOGLE_BOOKS_API_KEY` | Catalogue match + country retail prices | Google Cloud console → Books API |
 | `EBAY_CLIENT_ID/SECRET` | New and used listing prices (Browse API) | developer.ebay.com |
-| `SUPABASE_URL/SERVICE_ROLE_KEY` | Optional: Postgres rows + Storage mirror of frames. Run `services/api/supabase/schema.sql` | supabase.com |
-| `MONGODB_URI` | Optional: raw VLM outputs, transcripts, event log (falls back to local JSONL) | MongoDB Atlas |
+| `SUPABASE_URL/SERVICE_ROLE_KEY` | Optional: Postgres rows, event log (raw VLM outputs, transcripts) + Storage mirror of frames; falls back to local files. Run `services/api/supabase/schema.sql` | supabase.com |
 | `LANGSMITH_API_KEY` | Optional: traces of every model call | smith.langchain.com |
 
 Open Library and Frankfurter (ECB foreign-exchange rates) need no key.
@@ -107,7 +106,7 @@ regression checks. It is not used for the demo.
 | Geometry | OpenCV (homography, quad refinement) |
 | Fuzzy matching | rapidfuzz |
 | Catalogue and price sources | Google Books, Open Library, eBay Browse, Frankfurter |
-| Storage | Supabase (Postgres + Storage), MongoDB Atlas |
+| Storage | Supabase (Postgres + Storage) |
 | Tracing | LangSmith |
 | Frontend | Next.js 16, Tailwind 4, `@google/genai` |
 | Coding assistance | AI coding tools were used during development |

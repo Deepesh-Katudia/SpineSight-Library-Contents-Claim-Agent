@@ -20,7 +20,7 @@
  │  identify ─► price books ─► price items ─► room ─► 2nd locale ─► packet    │
  │  Google Books / Open Library   eBay Browse + Google Books + ECB FX   (code)│
  └────────────────────────────────────────────────────────────────────────────┘
-   claim_packet.json + report.html · Postgres rows · Mongo event log · LangSmith traces
+   claim_packet.json + report.html · Postgres rows + event log · LangSmith traces
 ```
 
 ## Which model does what

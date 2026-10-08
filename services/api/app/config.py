@@ -35,8 +35,6 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
     supabase_bucket: str = "frames"
-    mongodb_uri: str = ""
-    mongodb_db: str = "spinesight"
 
     web_origin: str = "http://localhost:3000"
     api_base_url: str = "http://localhost:8000"

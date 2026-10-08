@@ -95,7 +95,7 @@ def create_app() -> FastAPI:
         return {"ok": True, "configured": {
             "gemini": bool(s.gemini_api_key), "openrouter": bool(s.openrouter_api_key),
             "google_books": bool(s.google_books_api_key), "ebay": deps.ebay.configured,
-            "supabase": bool(s.supabase_url), "mongodb": bool(s.mongodb_uri)}}
+            "supabase": bool(s.supabase_url)}}
 
     @app.post("/live/token")
     async def live_token(deps: Deps = Depends(get_deps)) -> dict:

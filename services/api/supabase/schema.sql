@@ -42,8 +42,19 @@ create table if not exists review_queue (
   reason text not null
 );
 
+-- Raw stage outputs, transcripts and agent events. No FK: events are logged before the sweep row exists.
+create table if not exists events (
+  id bigint generated always as identity primary key,
+  sweep_id text not null,
+  kind text not null,
+  at timestamptz not null,
+  payload jsonb not null default '{}'::jsonb
+);
+create index if not exists events_sweep_idx on events (sweep_id, at);
+
 alter table sweeps enable row level security;
 alter table books enable row level security;
 alter table items enable row level security;
 alter table review_queue enable row level security;
+alter table events enable row level security;
 -- No policies: only the server (service role) reads and writes.
