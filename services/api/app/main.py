@@ -26,6 +26,9 @@ from app.stages.price import Locale
 
 log = logging.getLogger("spinesight")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# httpx logs every request URL at INFO, and Google Books takes its API key as a query parameter.
+for noisy in ("httpx", "httpcore"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 
 MAX_FRAME_BYTES = 4 * 1024 * 1024
 MAX_SWEEP_MS = 60 * 60 * 1000

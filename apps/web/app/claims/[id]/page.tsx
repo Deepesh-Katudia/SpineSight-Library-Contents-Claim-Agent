@@ -105,7 +105,7 @@ async function ClaimPacketView({ params }: { params: Promise<{ id: string }> }) 
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[820px] text-sm">
             <thead>
-              <tr className="label text-left text-muted">
+              <tr className="label text-left text-muted [&>th]:pr-4">
                 <th className="py-2">Shelf</th><th>Title</th><th>H × T cm</th><th>Replacement</th><th>Used</th><th>Evidence</th>
               </tr>
             </thead>
@@ -145,7 +145,7 @@ function priceCell(q: PriceQuote) {
 function BookRow({ b }: { b: Book }) {
   return (
     <tr className={`border-b border-rule align-top ${b.excluded ? "opacity-50" : ""}`}>
-      <td className="py-2 font-mono text-xs">{b.shelf}·{b.position}</td>
+      <td className="py-2 pr-4 font-mono text-xs">{b.shelf}·{b.position}</td>
       <td className="py-2 pr-4">
         {b.title ? (
           <>
@@ -157,9 +157,9 @@ function BookRow({ b }: { b: Book }) {
         )}
         {b.status === "needs_appraisal" && <span className="label mt-1 block text-oxblood">needs appraisal · {b.appraisal_reason}</span>}
       </td>
-      <td className="py-2 font-mono text-xs">{b.spine_height_cm ?? "—"} × {b.spine_thickness_cm ?? "—"}</td>
-      <td className="py-2">{priceCell(b.replacement_cost)}</td>
-      <td className="py-2">{priceCell(b.used_value)}</td>
+      <td className="py-2 pr-4 font-mono text-xs">{b.spine_height_cm ?? "—"} × {b.spine_thickness_cm ?? "—"}</td>
+      <td className="py-2 pr-4">{priceCell(b.replacement_cost)}</td>
+      <td className="py-2 pr-4">{priceCell(b.used_value)}</td>
       <td className="py-2">
         {b.frame_ref && (
           <a className="font-mono text-xs text-oxblood underline" href={`${PUBLIC_API}/frames/${b.frame_ref}`}>
