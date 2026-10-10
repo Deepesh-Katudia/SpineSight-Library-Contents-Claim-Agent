@@ -6,11 +6,16 @@ capture, and background stages identify, measure and price every book from its s
 non-book item and the room's surface areas. The output is a traceable claim packet
 (`claim_packet.json` + HTML report).
 
+> **Read first: [docs/assumptions-and-deviations.md](docs/assumptions-and-deviations.md).** No
+> compliant sweep was recorded for this submission, so there is no demo video, demo packet or
+> ground-truth score. That page lists exactly what is missing, the assumptions made, and what the
+> one development test run produced.
+
 ```
 apps/web/          Next.js 16 — landing page, /sweep live console (phone), /claims/[id] packet view
 services/api/      FastAPI — per-frame vision pipeline, pricing, room geometry, packet assembly
 eval/              score.py — scores a packet against hand-collected ground truth per pass bar
-docs/              architecture note, failure log, ground-truth results, reference-app notes
+docs/              architecture note, failure log, ground-truth results, assumptions and deviations, reference-app notes
 ```
 
 ## Quick start (under 15 minutes)

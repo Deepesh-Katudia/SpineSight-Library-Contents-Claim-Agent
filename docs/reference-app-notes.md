@@ -2,8 +2,8 @@
 
 Reference: `awesome-llm-apps/voice_ai_agents/insurance_claim_live_agent_team`. It uses FastAPI with a WebSocket, Gemini Live for voice and camera, Gemini Flash for fact extraction and photo checks, an ADK graph for intake rules, a field notebook, and a ZIP adjuster packet.
 
-> **Status:** the notes below come from reading its code. TODO before submission: run it locally and add
-> what we observed (latency, how its notebook updates).
+> **Status:** the reference app was **not run**. These notes come from reading its code only, so
+> nothing here is a runtime observation (latency, how its notebook updates).
 
 ## Kept
 - **The interaction pattern.** A claimant talks with the camera on, and the claim file builds on screen in real time.
