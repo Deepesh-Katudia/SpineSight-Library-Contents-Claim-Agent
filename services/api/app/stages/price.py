@@ -136,7 +136,10 @@ async def price_book(
 
     query, gtin = book_query(book), book.isbn
     _, native = marketplace_for(target.country)
-    new_listing = await listings.price(query=query, gtin=gtin, condition="new", country=target.country)
+    new_listing = await listings.price(
+        query=query, gtin=gtin, condition="new", country=target.country, match_title=book.title,
+        match_author=book.author,
+    )
     local_retail = google_retail_price(retail, target)
 
     # Preference: a local, unconverted price first; converted only when nothing local exists.
@@ -148,7 +151,10 @@ async def price_book(
     else:
         replacement_src = new_listing or local_retail
 
-    used_listing = await listings.price(query=query, gtin=gtin, condition="used", country=target.country)
+    used_listing = await listings.price(
+        query=query, gtin=gtin, condition="used", country=target.country, match_title=book.title,
+        match_author=book.author,
+    )
 
     result = PricingResult()
     if replacement_src:

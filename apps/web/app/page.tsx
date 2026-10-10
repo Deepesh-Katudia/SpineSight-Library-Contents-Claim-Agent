@@ -32,7 +32,7 @@ const RULES = [
 ];
 
 const PIPELINE = [
-  ["Live agent", "Gemini Live", "voice + 1 fps video, directs the capture"],
+  ["Live agent", "ElevenLabs Agents", "voice over WebRTC, directs the capture"],
   ["Detect", "Gemini 3.8 Flash", "spines, shelves, objects, A4 sheet, walls"],
   ["Read", "Gemini 3.8 Flash", "numbered spine crops, verbatim text only"],
   ["Track", "sequence alignment", "one physical book, counted once"],

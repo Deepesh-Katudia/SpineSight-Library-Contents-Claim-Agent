@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useCapture } from "@/hooks/useCapture";
 import { useSweepEvents, type Hint } from "@/hooks/useSweepEvents";
 import { api } from "@/lib/api";
-import { primeContext } from "@/lib/audio";
 import { SHARPNESS_MIN } from "@/lib/keyframes";
 import { LiveAgent, type TranscriptRole } from "@/lib/live-agent";
 import type { PacketSummary } from "@/lib/types";
@@ -14,6 +13,8 @@ import type { PacketSummary } from "@/lib/types";
 import { InventoryPanel, type TranscriptLine } from "./InventoryPanel";
 
 const HINT_VISIBLE_MS = 6000;
+// Capture targets offered when there is no voice agent to set them.
+const MANUAL_TARGETS = ["shelf:A", "shelf:B", "shelf:C", "wall:1", "wall:2", "wall:3", "wall:4"];
 
 type Phase = "idle" | "starting" | "live" | "finishing" | "done" | "error";
 
@@ -29,6 +30,7 @@ export function SweepConsole() {
   const [sweepId, setSweepId] = useState<string | null>(null);
   const [target, setTarget] = useState("");
   const [agentStatus, setAgentStatus] = useState("offline");
+  const [voiceOn, setVoiceOn] = useState(true);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([]);
   const [summary, setSummary] = useState<PacketSummary | null>(null);
   const [startedAt, setStartedAt] = useState(0);
@@ -83,9 +85,6 @@ export function SweepConsole() {
   }, [finish]);
 
   const start = useCallback(async () => {
-    // iOS: audio contexts must be created synchronously inside the tap, before any await
-    const playbackCtx = primeContext();
-    const micCtx = primeContext();
     setPhase("starting");
     setError("");
     try {
@@ -99,15 +98,26 @@ export function SweepConsole() {
         },
         onEndRequested: () => void finishRef.current(),
         onStatus: (s, detail) => setAgentStatus(detail ? `${s}: ${detail}` : s),
-      }, playbackCtx);
+      });
       agentRef.current = agent;
-      await agent.connect();
+      try {
+        await agent.connect(sweep.country, sweep.currency);
+        setVoiceOn(true);
+      } catch (err: unknown) {
+        // No voice agent (no key, network, quota): keep the sweep going as a silent capture.
+        await agent.close();
+        agentRef.current = null;
+        setVoiceOn(false);
+        setAgentStatus("voice off · capture only");
+        pushLine(
+          "system",
+          `Voice agent unavailable (${errorText(err)}). Capturing without voice: pick the shelf or wall below, then press End sweep.`,
+        );
+      }
       await startCapture(sweep.id, {
-        onAudio: (pcm) => agent.sendAudio(pcm),
-        onLiveFrame: (jpeg) => agent.sendVideoFrame(jpeg),
-        onLocalHint: (text) => agent.say(text),
+        onLocalHint: (text) => (agentRef.current ? agentRef.current.say(text) : pushLine("system", text)),
         getTarget: () => targetRef.current,
-      }, micCtx);
+      });
       setStartedAt(Date.now());
       setPhase("live");
     } catch (err: unknown) {
@@ -116,8 +126,6 @@ export function SweepConsole() {
       await stopCapture();
       await agentRef.current?.close();
       agentRef.current = null;
-      if (micCtx.state !== "closed") await micCtx.close();
-      if (playbackCtx.state !== "closed") await playbackCtx.close();
     }
   }, [startCapture, stopCapture, pushLine]);
 
@@ -127,6 +135,20 @@ export function SweepConsole() {
       void stopCapture();
     };
   }, [stopCapture]);
+
+  const chooseTarget = useCallback(
+    async (next: string) => {
+      if (!sweepId) return;
+      try {
+        const res = await api.setTarget(sweepId, next);
+        targetRef.current = res.target;
+        setTarget(res.target);
+      } catch (err: unknown) {
+        pushLine("system", `Could not set target: ${errorText(err)}`);
+      }
+    },
+    [sweepId, pushLine],
+  );
 
   const sharp = stats.quality.sharpness >= SHARPNESS_MIN;
   const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
@@ -139,7 +161,12 @@ export function SweepConsole() {
 
         {/* HUD */}
         <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-black/70 to-transparent p-3">
-          <Link href="/" className="pointer-events-auto flex items-center gap-2 text-sm font-semibold">
+          <Link
+            href="/"
+            aria-label="Back to home"
+            className="pointer-events-auto flex items-center gap-2 rounded-sm bg-black/60 px-2.5 py-1.5 text-sm font-semibold transition-colors hover:text-signal"
+          >
+            <span aria-hidden>←</span>
             <span className="inline-block h-4 w-1 rounded-sm bg-signal" /> SpineSight
           </Link>
           <div className="flex flex-col items-end gap-1.5">
@@ -155,6 +182,22 @@ export function SweepConsole() {
 
         {phase === "live" && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent p-3">
+            {!voiceOn && (
+              <div className="pointer-events-auto flex w-full flex-wrap gap-1.5" role="group" aria-label="Capture target">
+                {MANUAL_TARGETS.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => void chooseTarget(t)}
+                    aria-pressed={target === t}
+                    className={`label rounded-sm px-2.5 py-1.5 transition-colors ${
+                      target === t ? "bg-paper text-ink" : "bg-black/60 text-paper/80 hover:text-signal"
+                    }`}
+                  >
+                    {t.replace(":", " ")}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2">
               <Chip ok={sharp} label={sharp ? "sharp" : "blurry"} />
               <Chip ok={stats.quality.glare < 0.08} label={stats.quality.glare < 0.08 ? "no glare" : "glare"} />
@@ -187,6 +230,9 @@ export function SweepConsole() {
                 Retry building the packet for sweep {sweepId}
               </button>
             )}
+            <Link href="/" className="label text-paper/60 underline-offset-4 hover:text-signal hover:underline">
+              ← Back to home
+            </Link>
           </div>
         )}
 
@@ -254,6 +300,9 @@ function PacketCard({ summary: s }: { summary: PacketSummary }) {
           JSON
         </a>
       </div>
+      <Link href="/" className="label mt-4 inline-block text-paper/60 underline-offset-4 hover:text-signal hover:underline">
+        ← Back to home
+      </Link>
     </div>
   );
 }

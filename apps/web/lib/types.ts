@@ -145,7 +145,4 @@ export interface LiveWall {
 
 export interface LiveTokenResponse {
   token: string;
-  model: string;
-  instructions: string;
-  tools: unknown[];
 }

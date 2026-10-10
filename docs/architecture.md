@@ -3,9 +3,9 @@
 ```
  iPhone Safari  (apps/web /sweep)
  ┌──────────────────────────────────────────────────────────────┐
- │ mic 16 kHz PCM ─┐                     ┌─ agent voice 24 kHz  │
- │ video 1 fps 768px┼──► Gemini Live ◄───┘   tool calls ──┐     │
- │                  │   (ephemeral token from API)         │     │
+ │ mic ──────────────► ElevenLabs agent ──► agent voice         │
+ │ (WebRTC, token from API; hears, does not see) tool calls ┐     │
+ │ capture hints ──► [capture monitor] messages             │     │
  │ keyframes ~1.4 fps, 1920px, client sharpness/glare gate │     │
  └────────┬─────────────────────────────────▲──────────────┼─────┘
           │ POST /frames                    │ SSE /events  │ POST /target /facts /finish
@@ -27,7 +27,7 @@
 
 | Stage | Model / method | May output | May NOT output |
 |---|---|---|---|
-| Live agent | Gemini Live `gemini-3.8-live` | speech, tool calls (target, facts, end) | prices, sizes, titles it hasn't seen |
+| Live agent | ElevenLabs Agents (LLM `gemini-2.5-flash`), WebRTC | speech, tool calls (target, facts, locale, status, end) | prices, sizes, titles |
 | Detect | Gemini 3.8 Flash (OpenRouter) | boxes for spines, shelf rows, objects, A4 corners, wall/door quads, blur/glare scores | text, sizes, prices |
 | Read | Gemini 3.8 Flash | verbatim spine text, title/author/publisher **only if printed**, legibility | inferred titles |
 | Track | rapidfuzz sequence alignment (code) | one identity per physical book across frames | — |

@@ -3,7 +3,7 @@ import respx
 
 from app.sources import google_books, open_library
 from app.sources.common import Listing, summarize_listings
-from app.sources.ebay import EbayClient, SEARCH_URL, TOKEN_URL, marketplace_for
+from app.sources.ebay import EbayClient, SEARCH_URL, TOKEN_URL, marketplace_for, title_matches
 from app.sources.fx import FRANKFURTER_URL, FxService
 
 
@@ -101,6 +101,86 @@ async def test_ebay_used_price_median_with_delivery_filter_for_india():
     assert "deliveryCountry:IN" in req.url.params["filter"]
     assert req.headers["X-EBAY-C-MARKETPLACE-ID"] == "EBAY_US"
     assert price.amount == 9.0 and price.url == "https://ebay/b" and price.sample_size == 3
+
+
+@respx.mock
+async def test_ebay_falls_back_to_title_search_when_isbn_has_no_listings():
+    respx.post(TOKEN_URL).mock(return_value=httpx.Response(200, json={"access_token": "t", "expires_in": 7200}))
+    by_isbn = respx.get(SEARCH_URL, params={"gtin": "9781449319243"}).mock(
+        return_value=httpx.Response(200, json={"total": 0})
+    )
+    by_title = respx.get(SEARCH_URL, params={"q": "Learning Java Patrick Niemeyer"}).mock(
+        return_value=httpx.Response(200, json={"itemSummaries": [
+            {"price": {"value": "5.00", "currency": "USD"}, "itemWebUrl": "https://ebay/a",
+             "title": "Learning Java - Paperback By Niemeyer, Patrick"},
+            {"price": {"value": "25.00", "currency": "USD"}, "itemWebUrl": "https://ebay/b",
+             "title": "Learning Java 4th Edition O'Reilly"},
+            {"price": {"value": "12.00", "currency": "USD"}, "itemWebUrl": "https://ebay/c",
+             "title": "Learning Java by Patrick Niemeyer"},
+            {"price": {"value": "90.00", "currency": "USD"}, "itemWebUrl": "https://ebay/js",
+             "title": "Learning JavaScript Design Patterns"},
+            {"price": {"value": "70.00", "currency": "USD"}, "itemWebUrl": "https://ebay/x",
+             "title": "Head First Java"},
+        ]})
+    )
+    async with httpx.AsyncClient() as http:
+        ebay = EbayClient("id", "secret", http)
+        price = await ebay.price(query="Learning Java Patrick Niemeyer", gtin="9781449319243",
+                                 condition="used", country="US", match_title="Learning Java: A Bestselling Hands-On Java Tutorial")
+
+    assert by_isbn.called and by_title.called
+    assert by_title.calls[0].request.url.params["category_ids"] == "267"
+    assert price.sample_size == 3  # JavaScript and Head First listings are not this book
+    assert price.amount == 12.0
+    assert "title match" in price.source
+
+
+@respx.mock
+async def test_ebay_isbn_hit_skips_title_search_and_says_isbn_match():
+    respx.post(TOKEN_URL).mock(return_value=httpx.Response(200, json={"access_token": "t", "expires_in": 7200}))
+    search = respx.get(SEARCH_URL).mock(
+        return_value=httpx.Response(200, json={"itemSummaries": [
+            {"price": {"value": v, "currency": "USD"}, "itemWebUrl": f"https://ebay/{v}", "title": "anything"}
+            for v in ("6.00", "8.00", "11.00")
+        ]})
+    )
+    async with httpx.AsyncClient() as http:
+        price = await EbayClient("id", "secret", http).price(
+            query="Dune Frank Herbert", gtin="9780441013593", condition="used", country="US", match_title="Dune"
+        )
+
+    assert search.call_count == 1 and "gtin" in search.calls[0].request.url.params
+    assert price.amount == 8.0 and "ISBN match" in price.source
+
+
+@respx.mock
+async def test_ebay_too_few_matching_listings_is_no_price():
+    respx.post(TOKEN_URL).mock(return_value=httpx.Response(200, json={"access_token": "t", "expires_in": 7200}))
+    respx.get(SEARCH_URL).mock(
+        return_value=httpx.Response(200, json={"itemSummaries": [
+            {"price": {"value": "88.00", "currency": "USD"}, "itemWebUrl": "https://ebay/a", "title": "Dune"},
+            {"price": {"value": "12.00", "currency": "USD"}, "itemWebUrl": "https://ebay/b", "title": "Dune"},
+        ]})
+    )
+    async with httpx.AsyncClient() as http:
+        price = await EbayClient("id", "secret", http).price(query="Dune Frank Herbert", condition="new", country="US")
+
+    assert price is None
+
+
+def test_title_match_rejects_sequels_sets_and_collectibles():
+    def ok(listing: str) -> bool:
+        return title_matches("Dune", listing, author="Frank Herbert")
+
+    assert ok("Dune")
+    assert ok("DUNE by Frank Herbert Paperback")
+    assert ok("Dune - Frank Herbert (Mass Market) 40th anniversary")
+    assert not ok("Dune Messiah")
+    assert not ok("Frank Herbert - DUNE MESSIAH (Hardcover)")
+    assert not ok("Frank Herbert's Dune Saga Box Set Books 1-3")
+    assert not ok("DUNE by Frank Herbert Deluxe Collectible Hardcover edition NEW")
+    assert not ok("DUNE Frank Herbert Leather Bound Hardcover SEALED")
+    assert title_matches("Learning Java: A Bestselling Hands-On Java Tutorial", "Learning Java A Bestselling Hands On")
 
 
 async def test_ebay_unconfigured_returns_nothing():

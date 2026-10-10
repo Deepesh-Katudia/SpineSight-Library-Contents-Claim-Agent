@@ -27,7 +27,8 @@ cd services/api
 python -m venv .venv
 .venv/Scripts/activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest                          # 78 offline tests, no keys needed
+pytest                          # 85 offline tests, no keys needed
+python tools/create_elevenlabs_agent.py   # once: creates the voice agent, prints ELEVENLABS_AGENT_ID for .env
 uvicorn app.main:app --port 8000
 
 # 3. Web (new terminal)
@@ -50,7 +51,8 @@ On a phone:
 
 | Variable | What for | Where |
 |---|---|---|
-| `GEMINI_API_KEY` | Live voice + video agent (ephemeral tokens are minted server-side) | aistudio.google.com/apikey |
+| `ELEVENLABS_API_KEY` | Live voice agent (single-use WebRTC tokens are minted server-side) | elevenlabs.io → Settings → API keys |
+| `ELEVENLABS_AGENT_ID` | The agent to talk to. Create it from this repo: `python services/api/tools/create_elevenlabs_agent.py` (re-run to update) | printed by that script |
 | `OPENROUTER_API_KEY` | Detection + spine reading (`google/gemini-3.8-flash`) | openrouter.ai/keys |
 | `GOOGLE_BOOKS_API_KEY` | Catalogue match + country retail prices | Google Cloud console → Books API |
 | `EBAY_CLIENT_ID/SECRET` | New and used listing prices (Browse API) | developer.ebay.com |
@@ -101,14 +103,14 @@ regression checks. It is not used for the demo.
 
 | Role | Tool |
 |---|---|
-| Live conversation | Gemini Live (`gemini-3.8-live`) |
+| Live conversation | ElevenLabs Agents over WebRTC (LLM `gemini-2.5-flash`), configured from `app/live.py` |
 | Detection and spine OCR | Gemini 3.8 Flash via OpenRouter |
 | Geometry | OpenCV (homography, quad refinement) |
 | Fuzzy matching | rapidfuzz |
 | Catalogue and price sources | Google Books, Open Library, eBay Browse, Frankfurter |
 | Storage | Supabase (Postgres + Storage) |
 | Tracing | LangSmith |
-| Frontend | Next.js 16, Tailwind 4, `@google/genai` |
+| Frontend | Next.js 16, Tailwind 4, Motion, `@elevenlabs/client` |
 | Coding assistance | AI coding tools were used during development |
 
 ## What was kept, changed and thrown away from the reference app

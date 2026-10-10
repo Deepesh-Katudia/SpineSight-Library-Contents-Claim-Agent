@@ -21,8 +21,10 @@ class Settings(BaseSettings):
     second_currency: str = "USD"
     appraisal_threshold: float = 10000.0
 
-    gemini_api_key: str = ""
-    gemini_live_model: str = "gemini-3.8-live"
+    elevenlabs_api_key: str = ""
+    elevenlabs_agent_id: str = ""
+    # LLM behind the voice agent; used by tools/create_elevenlabs_agent.py
+    elevenlabs_llm: str = "gemini-2.5-flash"
 
     openrouter_api_key: str = ""
     openrouter_vision_model: str = "google/gemini-3.8-flash"

@@ -18,7 +18,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.config import get_settings
 from app.deps import Deps, build_deps
 from app.finalize import finalize
-from app.live import TOOLS, agent_instructions, create_ephemeral_token
+from app.live import conversation_token
 from app.report import render_report
 from app.schema.claim_packet import ClaimPacket
 from app.session import SweepSession
@@ -96,19 +96,19 @@ def create_app() -> FastAPI:
     async def health(deps: Deps = Depends(get_deps)) -> dict:
         s = deps.settings
         return {"ok": True, "configured": {
-            "gemini": bool(s.gemini_api_key), "openrouter": bool(s.openrouter_api_key),
+            "elevenlabs": bool(s.elevenlabs_api_key and s.elevenlabs_agent_id),
+            "openrouter": bool(s.openrouter_api_key),
             "google_books": bool(s.google_books_api_key), "ebay": deps.ebay.configured,
             "supabase": bool(s.supabase_url)}}
 
     @app.post("/live/token")
     async def live_token(deps: Deps = Depends(get_deps)) -> dict:
         try:
-            token = await create_ephemeral_token(deps.settings)
+            token = await conversation_token(deps.settings, deps.http)
         except Exception as exc:
             log.exception("live token failed")
             raise HTTPException(503, "live voice is not available") from exc
-        return {"token": token, "model": deps.settings.gemini_live_model,
-                "instructions": agent_instructions(deps.settings), "tools": TOOLS}
+        return {"token": token}
 
     @app.post("/sweeps")
     async def create_sweep(body: CreateSweep, request: Request, deps: Deps = Depends(get_deps)) -> dict:
