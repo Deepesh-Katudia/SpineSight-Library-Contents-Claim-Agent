@@ -32,3 +32,6 @@ Thumbs.db
 
 # local Claude Code state
 .claude/
+
+# launch video renders
+brag-output*/

@@ -9,7 +9,7 @@ deliverable is missing, it says so.
 | Requirement | What was delivered | Why |
 |---|---|---|
 | Real sweep: ≥ 60 books on ≥ 2 shelving units, ≥ 8 non-book items, one enclosed room | **Not done.** | The room available to me has no shelving units, and I could not get to a space with shelves before the deadline. |
-| Deliverable 2: demo video | **Missing.** | No real sweep was recorded. |
+| Deliverable 2: demo video | **Missing.** A 3-minute walkthrough (illustrative sample data, not a sweep) is at https://youtu.be/vtaFQ4W4wOc instead. | No real sweep was recorded. |
 | Deliverable 3: claim packet from the video's sweep | **Missing.** The only packet is from a development test run (`cca8408e71e8`, see below), and it is not the demo. | Same as above. |
 | Deliverable 4: ground truth and results against the pass bars | **Missing.** No ground truth was collected, so no accuracy is claimed against any pass bar. | Ground truth needs the real room. `eval/score.py` and `eval/ground_truth_template/` are ready for it. |
 | Deliverable 6: failure log | **Partial.** Written from the development test run, not from a scored sweep. | No scored sweep exists. |

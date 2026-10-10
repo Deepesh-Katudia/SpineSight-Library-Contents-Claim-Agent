@@ -11,6 +11,9 @@ non-book item and the room's surface areas. The output is a traceable claim pack
 > ground-truth score. That page lists exactly what is missing, the assumptions made, and what the
 > one development test run produced.
 
+**Walkthrough video (explainer, sample data):** https://youtu.be/vtaFQ4W4wOc
+This shows how to set up and use the app. It is not the one-take demo sweep the brief asks for.
+
 ```
 apps/web/          Next.js 16 — landing page, /sweep live console (phone), /claims/[id] packet view
 services/api/      FastAPI — per-frame vision pipeline, pricing, room geometry, packet assembly
